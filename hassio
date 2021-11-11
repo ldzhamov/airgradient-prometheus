@@ -1,0 +1,38 @@
+<?php
+
+/**
+ * This will return a JSON with all sensors data in /sensors folder.
+ * You can set firiandly names of the sensors in config.php, otherwise the sensorid will be used
+ * 
+ */
+
+$sensors_dir = '/sensors';
+$sensor_data = [];
+include "config.php";
+
+// Loop through all the json files in the sensors directory.
+foreach (glob($sensors_dir . '/' . '*.json') as $file) {
+  if ($file == '.' || $file == '..') {
+    continue;
+  }
+
+  // Get the sensor data out of the files.
+  $current_sensor = json_decode(file_get_contents($file), true);
+  // check if there is friendly name in config
+  $sensorname = (isset($sensors[$current_sensor['instance']]))?$sensors[$current_sensor['instance']]:$current_sensor['instance'];
+  $sensor_data['sensors'][$sensorname] = $current_sensor;
+}
+
+
+// Handle error condition.
+if (empty($sensor_data)) {
+  print('No sensor data available.');
+  http_response_code(500);
+  return;
+}
+
+$sensor_data['status'] = "OK";
+header('Content-Type: application/json; charset=utf-8');
+echo json_encode($sensor_data);
+
+?>
